@@ -24,6 +24,91 @@ A PHP library for charging cards on [Paystack](https://paystack.co/).
     $ composer require paystack/cards-sdk
 ```
 
+## Usage
+
+### Step 1: Initialize a Paystack transaction
+
+When a transaction is initialized via our api, we provide an `access_code`. You should keep track of This
+throughout the lifetime of your transaction as it is required for every call below.
+
+### Step 2: Fetch a paystack device id
+
+Using PaystackJS, save the device's id and send when making a chargeCard request.
+
+### Step 3: Create a function that initiates a `Paystack\Cards` object
+
+This function would be reused everytime you want to send us `card details`, `pin`, `phone` or `token`.
+
+```
+    function paystackCards(){
+        return new PaystackCards(
+            PAYSTACK_SECRET,
+            function ($transaction) {
+                respond(['status'=>'success','data'=>['reference'=>$transaction->data->reference]]);
+            },
+            function ($message) {
+                respond(['status'=>'failed','message'=>$message]);
+            },
+            function ($message) {
+                respond(['status'=>'authpin','message'=>$message]);
+            },
+            function ($message) {
+                respond(['status'=>'authotp','message'=>$message]);
+            },
+            function ($message) {
+                respond(['status'=>'authphone','message'=>$message]);
+            },
+            function ($message) {
+                respond(['status'=>'timeout','message'=>$message]);
+            },
+            function ($url) {
+                respond(['status'=>'auth3DS','url'=>$url]);
+            }
+        );
+    }
+```
+
+### Step 4: Build card details
+
+Use our `Paystack\Cards\CardBuilder` class to create a card object to charge.
+
+```
+    $cardbuilder = new Paystack\Cards\CardBuilder();
+    $card = $cardbuilder
+        ->withPan(filter_input(INPUT_POST, 'pan'))
+        ->withCvc(filter_input(INPUT_POST, 'cvc'))
+        ->withExpiryMonth(filter_input(INPUT_POST, 'exp_month'))
+        ->withExpiryYear(filter_input(INPUT_POST, 'exp_year'))
+        ->build();
+```
+
+### Step 5: Send card details (and a `pin` when requested)
+
+```
+    $paystackCards->chargeCard(
+        $access_code,
+        $device,
+        $card,
+        $pin);
+```
+
+### Step 6: Send phone when requested
+
+```
+    $paystackCards->validateOtp(
+        $access_code,
+        $otp);
+```
+
+### Step 7: Send phone when requested
+
+```
+    $paystackCards->validatePhone(
+        $access_code,
+        $phone);
+```
+
+
 ## Change log
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
