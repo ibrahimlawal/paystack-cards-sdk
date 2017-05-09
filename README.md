@@ -92,7 +92,7 @@ Use our `Paystack\Cards\CardBuilder` class to create a card object to charge.
         $pin);
 ```
 
-### Step 6: Send phone when requested
+### Step 6: Send otp when requested
 
 ```
     $paystackCards->validateOtp(
